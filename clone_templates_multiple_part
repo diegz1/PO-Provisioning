@@ -1,0 +1,57 @@
+---
+- name: Clone templates and transfer to content libraries if modified
+  hosts: localhost
+  gather_facts: no
+  vars:
+    state_file: "./template_versions.yml"  # Path to file where we track version changes of VM templates
+    vcenters:  # List defining each vCenter's connection details and target settings
+      - hostname: 'vcenter_destination1.local'
+        username: 'admin1'
+        password: 'password1'
+        datacenter: 'datacenter1'
+        content_library_id: 'content_library_ID1'
+        destination_host: 'host_destination1.local'
+        datastore: 'datastore_destination1'
+        vm_folder: 'folder_destination1'
+      - hostname: 'vcenter_destination2.local'
+        username: 'admin2'
+        password: 'password2'
+        datacenter: 'datacenter2'
+        content_library_id: 'content_library_ID2'
+        destination_host: 'host_destination2.local'
+        datastore: 'datastore_destination2'
+        vm_folder: 'folder_destination2'
+    templates:  # Templates to clone
+      - name: "template_rhel8"
+      - name: "template_ubuntu20"
+
+  tasks:
+    - name: Initialize state file if it does not exist
+      copy:
+        content: ""
+        dest: "{{ state_file }}"
+        force: no
+
+    - name: Load existing versions from state file
+      include_vars:
+        file: "{{ state_file }}"
+        name: "state_data"
+
+    - name: Clone and transfer templates for each vCenter
+      include_tasks: clone_and_transfer.yml  # Include tasks from external file
+      loop: "{{ vcenters }}"
+      loop_control:
+        loop_var: vcenter  # Name of the variable that represents the current item in the loop
+
+    - name: Save the new changeVersion to the state file
+      lineinfile:
+        path: "{{ state_file }}"
+        line: "{{ item.name }}: {{ item.changeVersion }}"
+        create: yes
+      loop: "{{ templates }}"
+      when: "state_data[item.name] is undefined or state_data[item.name] != item.changeVersion"
+
+    - name: Display cloning and transfer results
+      debug:
+        msg: "The template {{ item.name }} was processed across all vCenters."
+      loop: "{{ templates }}"
