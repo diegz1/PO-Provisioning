@@ -19,7 +19,7 @@
     content_library_id: 'content_library_ID'
     templates:
       - name: "template_rhel8"
-      - name: "template_ubuntu20"
+      - name: "template_windows"
 
   tasks:
     - name: Initialize state file if it does not exist
