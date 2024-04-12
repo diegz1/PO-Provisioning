@@ -23,7 +23,7 @@
         vm_folder: 'folder_destination2'
     templates:  # Templates to clone
       - name: "template_rhel8"
-      - name: "template_ubuntu20"
+      - name: "template_windows"
 
   tasks:
     - name: Initialize state file if it does not exist
