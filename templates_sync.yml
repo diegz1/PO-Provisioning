@@ -1,0 +1,77 @@
+- name: Download and conditionally transfer multiple VMware VM templates
+  hosts: ftp
+  gather_facts: no
+  vars:
+    datacenter_name: "{{ lookup('ansible.builtin.vault', 'datacenter_name') }}"
+    datastore_name: "{{ lookup('ansible.builtin.vault', 'datastore_name') }}"
+    templates:
+      - name: "rhel9"
+        remote_url: "{{ lookup('ansible.builtin.vault', 'rhel9_remote_url') }}"
+        checksum_url: "{{ lookup('ansible.builtin.vault', 'rhel9_checksum_url') }}"
+      - name: "rhel8"
+        remote_url: "{{ lookup('ansible.builtin.vault', 'rhel8_remote_url') }}"
+        checksum_url: "{{ lookup('ansible.builtin.vault', 'rhel8_checksum_url') }}"
+      - name: "win2022"
+        remote_url: "{{ lookup('ansible.builtin.vault', 'win2022_remote_url') }}"
+        checksum_url: "{{ lookup('ansible.builtin.vault', 'win2022_checksum_url') }}"
+      - name: "win2019"
+        remote_url: "{{ lookup('ansible.builtin.vault', 'win2019_remote_url') }}"
+        checksum_url: "{{ lookup('ansible.builtin.vault', 'win2019_checksum_url') }}"
+
+  tasks:
+    - name: Download each template only if it has been modified
+      block:
+        - name: Check local file info for {{ item.name }}
+          ansible.builtin.stat:
+            path: "/local/path/to/{{ item.name }}"
+          register: local_file_info
+          tags: check_local_file
+
+        - name: Get the checksum of the remote file for {{ item.name }}
+          ansible.builtin.uri:
+            url: "{{ item.checksum_url }}"
+            method: GET
+            return_content: yes
+          register: remote_checksum
+          ignore_errors: yes
+          tags: get_remote_checksum
+
+        - name: Download VM template {{ item.name }} only if modified
+          ansible.builtin.get_url:
+            url: "{{ item.remote_url }}"
+            dest: "/local/path/to/{{ item.name }}"
+            checksum: "sha256:{{ remote_checksum.content | regex_replace('\\n','') }}"
+            force: yes
+          when: remote_checksum.status != 404 and (not local_file_info.stat.exists or local_file_info.stat.checksum != remote_checksum.content | regex_replace('\\n',''))
+          register: download
+          tags: download_template
+
+        - name: Transfer the template {{ item.name }} to a VMware datastore
+          community.vmware.vmware_datastore_upload:
+            datacenter: "{{ datacenter_name }}"
+            datastore: "{{ datastore_name }}"
+            src: "/local/path/to/{{ item.name }}"
+            dest: "/remote/path/to/{{ item.name }}"
+          delegate_to: localhost
+          when: download.changed
+          tags: upload_to_datastore
+
+        - name: Display a message if the template {{ item.name }} has been downloaded
+          ansible.builtin.debug:
+            msg: "The template {{ item.name }} has been updated and downloaded."
+          when: download.changed
+          tags: display_message
+
+      loop: "{{ templates }}"
+      tags: download_templates
+
+      ## To be modified
+    #hosts : 
+    #datacenter_name : vault
+    #datastore_name : vault
+    #templates : complete or check template list
+    #    name: name of the template
+    #    remote_url: url ftp - vault
+    #    checksum_url: url checksum - vault
+    #If checksum not possible, use timestamp with python command = change playbook
+    #Note: vcenter credentials in awx
