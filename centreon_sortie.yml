@@ -1,0 +1,32 @@
+---
+- name: Playbook pour retirer une machine de la supervision Centreon
+  hosts: all
+  gather_facts: no
+  vars_files:
+    - secrets.yml
+  tasks:
+    - name: Authentification à l'API REST de Centreon
+      ansible.builtin.uri:
+        url: "https://centreon_server/centreon/api/index.php?action=authenticate"
+        method: POST
+        body: 
+          username: "{{ centreon_username }}"
+          password: "{{ centreon_password }}"
+        body_format: form-urlencoded
+        headers:
+          Accept: "application/json"
+        validate_certs: no
+        return_content: yes
+      register: login
+      delegate_to: localhost
+
+    - name: Retirer la machine de la supervision Centreon
+      ansible.builtin.uri:
+        url: "https://centreon_server/centreon/api/v2/hosts/{{ host_id }}"
+        method: DELETE
+        headers:
+          Accept: "application/json"
+          centreon-auth-token: "{{ login.json.authToken }}"
+        validate_certs: no
+      delegate_to: localhost
+...
