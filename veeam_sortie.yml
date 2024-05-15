@@ -1,0 +1,28 @@
+---
+- name: Playbook pour retirer une machine d'un job de sauvegarde Veeam
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - secrets.yml
+  tasks:
+    - name: Authentification à l'API REST de Veeam
+      ansible.builtin.uri:
+        url: "https://veeam_server:9398/api/sessionsMngr/?v=latest"
+        method: POST
+        headers:
+          Accept: "application/json"
+        user: "{{ veeam_username }}"
+        password: "{{ veeam_password }}"
+        validate_certs: no
+        return_content: yes
+      register: login
+
+    - name: Retirer la machine du job de sauvegarde Veeam
+      ansible.builtin.uri:
+        url: "https://veeam_server:9398/api/backupJobs/{{ job_id }}/includedObjects/{{ include_id }}"
+        method: DELETE
+        headers:
+          Accept: "application/json"
+          X-RestSvcSessionId: "{{ login.json.access_token }}"
+        validate_certs: no
+      delegate_to: localhost
