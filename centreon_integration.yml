@@ -1,0 +1,90 @@
+##RHEL
+---
+- name: Playbook pour l'intégration des machines RHEL à la supervision Centreon
+  hosts: rhel_servers
+  gather_facts: no
+  vars_files:
+    - secrets.yml
+  tasks:
+    - name: Authentification à l'API REST de Centreon
+      ansible.builtin.uri:
+        url: "https://centreon_server/centreon/api/latest/login"
+        method: POST
+        body: 
+          security: 
+            credentials: 
+              login: "{{ centreon_username }}"
+              password: "{{ centreon_password }}"
+        body_format: json
+        headers:
+          Accept: "application/json"
+          Content-Type: "application/json"
+        validate_certs: no
+        return_content: yes
+      register: login
+      delegate_to: localhost
+
+    - name: Ajouter la machine à Centreon
+      ansible.builtin.uri:
+        url: "https://centreon_server/centreon/api/latest/hosts"
+        method: POST
+        body: 
+          name: "{{ ansible_facts['hostname'] }}"
+          alias: "{{ ansible_facts['hostname'] }}"
+          ip: "{{ ansible_facts['default_ipv4']['address'] }}"
+          template: "RHEL-Template"
+          poller: "Central"
+        body_format: json
+        headers:
+          Accept: "application/json"
+          Content-Type: "application/json"
+          centreon-auth-token: "{{ login.json.authToken }}"
+        validate_certs: no
+      delegate_to: localhost
+
+
+##Windows
+---
+- name: Playbook pour l'intégration des machines Windows à la supervision Centreon
+  hosts: windows_servers
+  gather_facts: no
+  vars_files:
+    - secrets.yml
+  tasks:
+    - name: Authentification à l'API REST de Centreon
+      ansible.builtin.uri:
+        url: "https://centreon_server/centreon/api/latest/login"
+        method: POST
+        body: 
+          security: 
+            credentials: 
+              login: "{{ centreon_username }}"
+              password: "{{ centreon_password }}"
+        body_format: json
+        headers:
+          Accept: "application/json"
+          Content-Type: "application/json"
+        validate_certs: no
+        return_content: yes
+      register: login
+      delegate_to: localhost
+
+    - name: Ajouter la machine à Centreon
+      ansible.builtin.uri:
+        url: "https://centreon_server/centreon/api/latest/hosts"
+        method: POST
+        body: 
+          name: "{{ ansible_facts['hostname'] }}"
+          alias: "{{ ansible_facts['hostname'] }}"
+          ip: "{{ ansible_facts['default_ipv4']['address'] }}"
+          template: "Windows-Template"
+          poller: "Central"
+        body_format: json
+        headers:
+          Accept: "application/json"
+          Content-Type: "application/json"
+          centreon-auth-token: "{{ login.json.authToken }}"
+        validate_certs: no
+      delegate_to: localhost
+
+...
