@@ -1,0 +1,90 @@
+##(voir si ajouter condition sur install agent entre windows et veeam)
+##Pour RHEL
+---
+- name: Playbook pour l'intégration des machines à un job de sauvegarde Veeam
+  hosts: veeam_servers
+  gather_facts: no
+  tasks:
+    - name: Installer le client Veeam
+      ansible.builtin.yum:
+        name: veeam
+        state: present
+      become: yes
+
+    - name: Ajouter la machine à la liste des serveurs Veeam
+      ansible.builtin.uri:
+        url: "https://veeam_server:9398/api/servers"
+        method: POST
+        body: 
+          HostName: "{{ ansible_facts['hostname'] }}"
+          Username: "root"
+          Password: "Password"
+        body_format: json
+        headers:
+          Accept: "application/json"
+        user: "username"
+        password: "password"
+        validate_certs: no
+      delegate_to: localhost
+
+    - name: Ajouter la machine au job de sauvegarde
+      ansible.builtin.uri:
+        url: "https://veeam_server:9398/api/backupJobs/{{ job_id }}/includedObjects"
+        method: POST
+        body: 
+          HostName: "{{ ansible_facts['hostname'] }}"
+          Username: "root"
+          Password: "Password"
+        body_format: json
+        headers:
+          Accept: "application/json"
+        user: "username"
+        password: "password"
+        validate_certs: no
+      delegate_to: localhost
+...
+
+#Pour windows
+---
+- name: Playbook pour l'intégration des machines Windows à un job de sauvegarde Veeam
+  hosts: windows_servers
+  gather_facts: no
+  tasks:
+    - name: Installer le client Veeam
+      ansible.windows.win_package:
+        path: C:\\path\\to\\VeeamBackup&Replication_x.x.x.x.x.exe
+        state: present
+      become: yes
+
+    - name: Ajouter la machine à la liste des serveurs Veeam
+      ansible.builtin.uri:
+        url: "https://veeam_server:9398/api/servers"
+        method: POST
+        body: 
+          HostName: "{{ ansible_facts['hostname'] }}"
+          Username: "Administrator"
+          Password: "Password"
+        body_format: json
+        headers:
+          Accept: "application/json"
+        user: "username"
+        password: "password"
+        validate_certs: no
+      delegate_to: localhost
+
+    - name: Ajouter la machine au job de sauvegarde
+      ansible.builtin.uri:
+        url: "https://veeam_server:9398/api/backupJobs/{{ job_id }}/includedObjects"
+        method: POST
+        body: 
+          HostName: "{{ ansible_facts['hostname'] }}"
+          Username: "Administrator"
+          Password: "Password"
+        body_format: json
+        headers:
+          Accept: "application/json"
+        user: "username"
+        password: "password"
+        validate_certs: no
+      delegate_to: localhost
+...
