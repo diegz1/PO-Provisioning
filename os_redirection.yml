@@ -1,0 +1,9 @@
+---
+tasks:
+  - name: Exécute le playbook de déploiement Windows
+    include_tasks: deploy_windows_vcenter.yml
+    when: os_choice == 'windows'
+
+  - name: Exécute le playbook de déploiement RHEL
+    include_tasks: deploy_rhel_vcenter.yml
+    when: os_choice == 'rhel'
