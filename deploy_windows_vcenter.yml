@@ -24,7 +24,8 @@
         customization:
           autologon: true
           hostname: "{{ survey_vm_name }}"
-          runonce:
-          - powershell.exe -ExecutionPolicy Unrestricted -File C:\Temp\ConfigureRemotingForAnsible.ps1 -ForceNewSSLCert -EnableCredSSP
+### Le service WinRM est déjà installé et configuré --> ajouter le service account ad au credentials 
+#         runonce:
+#          - powershell.exe -ExecutionPolicy Unrestricted -File C:\Temp\ConfigureRemotingForAnsible.ps1 -ForceNewSSLCert -EnableCredSSP
       delegate_to: localhost
       register: deploy_vm
