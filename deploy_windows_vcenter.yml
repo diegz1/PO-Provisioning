@@ -1,0 +1,30 @@
+## Windows ##
+---
+- name: Déployer une machine Windows Server à partir d'un template sur vCenter
+  gather_facts: false
+  tasks:
+    - name: Déployer un template
+      community.vmware.vmware_guest:
+        validate_certs: false
+        datacenter: "{{ survey_datacenter_name }}"
+        folder: "/{{ survey_datacenter_name }}/vm/{{ folder }}"
+        name: "{{ survey_vm_name }}"
+        state: poweredon
+        template: "{{ survey_vm_template }}"
+        disk:
+        - size_gb: "{{ survey_disk_size }}"
+          type: thin
+          datastore: "{{ datastore }}"
+        hardware:
+          memory_mb: "{{ survey_memory_mb }}"
+          num_cpus: "{{ survey_num_cpus }}"
+        networks:
+        - name: "{{ survey_network }}"
+          device_type: vmxnet3
+        customization:
+          autologon: true
+          hostname: "{{ survey_vm_name }}"
+          runonce:
+          - powershell.exe -ExecutionPolicy Unrestricted -File C:\Temp\ConfigureRemotingForAnsible.ps1 -ForceNewSSLCert -EnableCredSSP
+      delegate_to: localhost
+      register: deploy_vm
