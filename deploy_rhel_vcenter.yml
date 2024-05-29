@@ -1,0 +1,46 @@
+## RHEL ##
+---
+- name: Déployer une VM avec des paramètres spécifiques
+  gather_facts: false
+  vars:
+    vcenter:
+      datacenter: "{{ datacenter }}"
+      cluster: "{{ cluster }}"
+    vm:
+      template_name: "{{ survey_template }}"
+      compute_resource: "{{ survey_compute_resource }}"
+      storage: "{{ survey_storage }}"
+      disk_format: "{{ survey_disk_format }}"
+      computer_name: "{{ survey_computer_name }}"
+      cpu: "{{ survey_cpu }}"
+      ram: "{{ survey_ram }}"
+      hard_disk: "{{ survey_hard_disk }}"
+    network:
+      parameters: "{{ survey_network_parameters }}"
+      ip: "{{ survey_ip }}"
+      netmask: "{{ survey_netmask }}"
+      gateway: "{{ survey_gateway }}"
+  tasks:
+    - name: Déployer la VM
+      community.vmware.vmware_guest:
+        validate_certs: false
+        datacenter: "{{ vcenter.datacenter }}"
+        cluster: "{{ vcenter.cluster }}"
+        folder: "/vm"
+        name: "{{ vm.computer_name }}"
+        state: poweredon
+        template: "{{ vm.template_name }}"
+        disk:
+        - size_gb: "{{ vm.hard_disk }}"
+          type: "{{ vm.disk_format }}"
+          datastore: "{{ vm.storage }}"
+        hardware:
+          memory_mb: "{{ vm.ram }}"
+          num_cpus: "{{ vm.cpu }}"
+        networks:
+        - name: "{{ network.parameters }}"
+          start_connected: true
+          ip: "{{ network.ip }}"
+          netmask: "{{ network.netmask }}"
+          gateway: "{{ network.gateway }}"
+        wait_for_ip_address: true
