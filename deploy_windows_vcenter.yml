@@ -2,7 +2,7 @@
 - name: Deploy a Windows Server machine from a template on vCenter
   gather_facts: false
   tasks:
-    - name: Déployer un template
+    - name: vm by template deploy
       community.vmware.vmware_guest:
         validate_certs: false
         datacenter: "{{ datacenter_name }}"
