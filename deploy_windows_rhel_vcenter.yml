@@ -1,0 +1,68 @@
+---
+- name: Deploy a Windows Server machine from a template on vCenter
+  gather_facts: false
+  tasks:
+    - name: Deploy by template
+      community.vmware.vmware_guest:
+        validate_certs: false
+        datacenter: "{{ datacenter }}"
+        folder: "/{{ datacenter }}/vm/{{ folder }}"
+        name: "{{ survey_vm_name }}"
+        state: poweredon
+        template: "{{ survey_vm_template }}"
+        disk:
+        - size_gb: "{{ survey_disk_size }}"
+          type: thin
+          datastore: "{{ datastore }}"
+        hardware:
+          memory_mb: "{{ survey_memory_mb }}"
+          num_cpus: "{{ survey_num_cpus }}"
+        networks:
+        - name: "{{ survey_network }}"
+          device_type: vmxnet3
+          ip: "{{ survey_ip }}"
+          netmask: "{{ survey_netmask }}"
+          gateway: "{{ survey_gateway }}"
+          dns_servers:
+            - "{{ survey_dns1 }}"
+            - "{{ survey_dns2 }}"
+        customization:
+          autologon: true
+          hostname: "{{ survey_vm_name }}"
+      delegate_to: localhost
+      register: deploy_vm
+---
+---
+- name: Deploy a RHEL server machine from a template on vCenter
+  gather_facts: false
+  tasks:
+    - name: Déployer un template
+      community.vmware.vmware_guest:
+        validate_certs: false
+        datacenter: "{{ datacenter }}"
+        folder: "/{{ datacenter }}/vm/{{ folder }}"
+        name: "{{ survey_vm_name }}"
+        state: poweredon
+        template: "{{ survey_vm_template }}"
+        disk:
+        - size_gb: "{{ survey_disk_size }}"
+          type: thin
+          datastore: "{{ datastore }}"
+        hardware:
+          memory_mb: "{{ survey_memory_mb }}"
+          num_cpus: "{{ survey_num_cpus }}"
+        networks:
+        - name: "{{ survey_network }}"
+          device_type: vmxnet3
+          ip: "{{ survey_ip }}"
+          netmask: "{{ survey_netmask }}"
+          gateway: "{{ survey_gateway }}"
+          dns_servers:
+            - "{{ survey_dns1 }}"
+            - "{{ survey_dns2 }}"
+        customization:
+          autologon: true
+          hostname: "{{ survey_vm_name }}"
+      delegate_to: localhost
+      register: deploy_vm
+---
