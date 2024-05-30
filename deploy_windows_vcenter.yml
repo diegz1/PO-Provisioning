@@ -1,13 +1,12 @@
-## Windows ##
 ---
-- name: Déployer une machine Windows Server à partir d'un template sur vCenter
+- name: Deploy a Windows Server machine from a template on vCenter
   gather_facts: false
   tasks:
     - name: Déployer un template
       community.vmware.vmware_guest:
         validate_certs: false
-        datacenter: "{{ survey_datacenter_name }}"
-        folder: "/{{ survey_datacenter_name }}/vm/{{ folder }}"
+        datacenter: "{{ datacenter_name }}"
+        folder: "/{{ datacenter_name }}/vm/{{ folder }}"
         name: "{{ survey_vm_name }}"
         state: poweredon
         template: "{{ survey_vm_template }}"
@@ -21,11 +20,15 @@
         networks:
         - name: "{{ survey_network }}"
           device_type: vmxnet3
+          ip: "{{ survey_ip }}"
+          netmask: "{{ survey_netmask }}"
+          gateway: "{{ survey_gateway }}"
+          dns_servers:
+            - "{{ survey_dns1 }}"
+            - "{{ survey_dns2 }}"
         customization:
           autologon: true
           hostname: "{{ survey_vm_name }}"
-### Le service WinRM est déjà installé et configuré --> ajouter le service account ad au credentials 
-#         runonce:
-#          - powershell.exe -ExecutionPolicy Unrestricted -File C:\Temp\ConfigureRemotingForAnsible.ps1 -ForceNewSSLCert -EnableCredSSP
       delegate_to: localhost
       register: deploy_vm
+---
